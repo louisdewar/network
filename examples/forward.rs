@@ -9,11 +9,7 @@ pub fn main() {
     let network = Network::new(layer_sizes, weights, biases);
 
     let output = network.feed_forward(vec![5.0, 1.0]);
-    let entire = network.feed_forward_entire(vec![5.0, 1.0]);
-
-    // println!("Output: {:?}", output);
-    //
-    // println!("Entire output: {:?}", entire);
+    let (entire, _) = network.feed_forward_entire(vec![5.0, 1.0]);
 
     // Check that the two output neurons equal, the last layer will be the last entries in the entire output
     assert!(

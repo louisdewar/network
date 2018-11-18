@@ -1,6 +1,7 @@
 extern crate rand;
 
-pub mod util;
+mod util;
+pub use util::find_index_of_max;
 
 pub struct Network {
     // Where the weights for the [i + 1]th (we skip the input layer) layer begin in the array
@@ -187,10 +188,14 @@ impl Network {
             let delta_start = self.biases_indices[layer_index - 1];
             let layer_size = self.layer_sizes[layer_index];
 
+            // Cost function for output layer
             let error = (activation_start..activation_start + layer_size)
                 .zip(desired_output.iter())
-                .map(|(i, desired)| {
-                    (activations[i] - desired) * util::sigmoid_prime(zs[i - self.layer_sizes[0]])
+                .map(|(i, y)| {
+                    let a = activations[i];
+                    (a - y)
+                    // (activations[i] - y) * util::sigmoid_prime(zs[i - self.layer_sizes[0]])
+                    // -(y * a.ln() + (1.0 - y) * ((1.0 - a).ln()))// + 5.0
                 });
 
             for (delta, error) in deltas[delta_start..delta_start + layer_size]
@@ -205,7 +210,6 @@ impl Network {
 
         // Reverse through the hidden layers (0 becomes first layer)
         for layer_index in (0..self.layer_sizes.len() - 1).rev() {
-            let start_index = self.neuron_indices[layer_index];
             let layer_size = self.layer_sizes[layer_index + 1];
             // prev layer here means the last layer from the loop (even though it's actually the next layer)
             let prev_layer_weight_start = self.weights_indices[layer_index];
@@ -226,27 +230,20 @@ impl Network {
             }
 
             last_error = error_start..error_start + layer_size;
-
-            // // Delta is error * transfer derivative of output
-            // let mut delta: Vec<_> = activations[start_index..start_index + layer_size]
-            //     .iter()
-            //     .zip(error.iter())
-            //     .map(|(z, error)| error * util::sigmoid_prime(*z))
-            //     .collect();
-            //
-            // deltas.append(&mut delta);
         }
 
         (activations, deltas)
     }
 
-    fn mini_batch(&mut self, mini_batch: Vec<(Vec<f64>, Vec<f64>)>, learn_rate: f64) {
+    fn mini_batch(&mut self, mini_batch: Vec<(Vec<f64>, Vec<f64>)>, n: usize, learn_rate: f64, lambda: f64) {
         // Learn rate should be averaged across batch
         let learn_rate = learn_rate / mini_batch.len() as f64;
 
         let mut total_activations =
             vec![0.0; self.neuron_indices.last().unwrap() + self.layer_sizes.last().unwrap()];
         let mut total_deltas = vec![0.0; self.biases.len()];
+
+        let mini_batch_len = mini_batch.len() as f64;
 
         for (input, desired_output) in mini_batch {
             let (activations, deltas) = self.back_propogate(input.to_vec(), &desired_output);
@@ -279,11 +276,11 @@ impl Network {
                     .iter_mut()
                     .enumerate()
                 {
-                    *weight -= input[weight_i] * delta * learn_rate;
+                    *weight = *weight * (1.0 - learn_rate * (lambda / n as f64)) - (learn_rate / mini_batch_len) * input[weight_i] * delta * learn_rate;
                 }
 
                 // Update bias
-                self.biases[self.biases_indices[layer_index - 1] + neuron_i] -= delta * learn_rate;
+                self.biases[self.biases_indices[layer_index - 1] + neuron_i] -= (learn_rate / mini_batch_len) * delta * learn_rate;
             }
         }
     }
@@ -318,7 +315,8 @@ impl Network {
     ) {
         for epoch in 0..epochs {
             for batch in training_examples.chunks(batch_size) {
-                self.mini_batch(batch.to_vec(), learn_rate);
+                // TOOD: pick suitable lambda
+                self.mini_batch(batch.to_vec(), training_examples.len(), learn_rate, 5.0);
             }
 
             if epoch % 5 == 0 {
