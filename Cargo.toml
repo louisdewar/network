@@ -1,0 +1,14 @@
+[package]
+name = "network"
+version = "0.1.0"
+authors = ["Louis de Wardt <contact@louis.dewardt.uk>"]
+
+[dependencies]
+rand = "0.6"
+
+[dev-dependencies]
+criterion = "0.2"
+
+[[bench]]
+name = "forward"
+harness = false
