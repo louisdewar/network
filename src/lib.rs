@@ -65,20 +65,21 @@ impl Network {
         use rand::distributions::Normal;
         use rand::prelude::*;
 
-        let mut n_weights = 0;
+        let mut weights = Vec::new();
         let mut n_biases = 0;
 
         for i in 1..layer_sizes.len() {
-            n_weights += layer_sizes[i] * layer_sizes[i - 1];
+            let mut new_weights = rand::thread_rng()
+                // Weights are distributed as normal with mean 0 and variance of 1/(number of weights connecting to a single neuron)
+                .sample_iter(&Normal::new(0.0, 1.0 / layer_sizes[i - 1] as f64))
+                .take(layer_sizes[i] * layer_sizes[i - 1])
+                .collect::<Vec<f64>>();
+
+            weights.append(&mut new_weights);
+
             n_biases += layer_sizes[i];
         }
 
-        // https://stackoverflow.com/questions/41872353/how-to-test-if-my-implementation-of-back-propagation-neural-network-is-correct
-        // Assume 5.0 is the average number of inputs to the each neuron (it really isn't, should be done better)
-        let weights = rand::thread_rng()
-            .sample_iter(&Normal::new(0.0, 1.0))
-            .take(n_weights)
-            .collect();
         let biases = rand::thread_rng()
             .sample_iter(&Normal::new(0.0, 1.0))
             .take(n_biases)
@@ -193,9 +194,10 @@ impl Network {
                 .zip(desired_output.iter())
                 .map(|(i, y)| {
                     let a = activations[i];
+                    // This is the definition of the cost function (currently cross-entropy)
                     (a - y)
+                    // Another cost function
                     // (activations[i] - y) * util::sigmoid_prime(zs[i - self.layer_sizes[0]])
-                    // -(y * a.ln() + (1.0 - y) * ((1.0 - a).ln()))// + 5.0
                 });
 
             for (delta, error) in deltas[delta_start..delta_start + layer_size]
