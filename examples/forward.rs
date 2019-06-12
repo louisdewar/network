@@ -13,7 +13,7 @@ pub fn main() {
 
     // Check that the two output neurons equal, the last layer will be the last entries in the entire output
     assert!(
-        output[0] == entire[entire.len() - 2] && output[1] == entire[entire.len() - 1],
+        (output[0] - entire[entire.len() - 2]).abs() < std::f64::EPSILON && (output[1] - entire[entire.len() - 1]).abs() < std::f64::EPSILON,
         "Outputs didn't equal each other"
     );
 }

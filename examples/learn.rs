@@ -28,7 +28,7 @@ pub fn main() {
     }
     println!("{}", network.examine_error(training_examples.clone()));
 
-    let average_error = network.train(training_examples.clone(), 100000, 0.01);
+    let average_error = network.train(training_examples.clone(), 100_000, 0.01);
 
     println!("Average error: {}", average_error);
 

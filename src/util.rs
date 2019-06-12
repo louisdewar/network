@@ -19,3 +19,10 @@ pub fn find_index_of_max(a: &[f64]) -> usize {
         }
     }).0
 }
+
+pub fn index_to_output_layer(i: usize, output_size: usize) -> Vec<f64> {
+    let mut vec = vec![0.0; output_size];
+    vec[i] = 1.0;
+
+    vec
+}

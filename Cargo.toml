@@ -5,6 +5,8 @@ authors = ["Louis de Wardt <contact@louis.dewardt.uk>"]
 
 [dependencies]
 rand = "0.6"
+serde = "1.0.80"
+serde_derive = "1.0.80"
 
 [dev-dependencies]
 criterion = "0.2"

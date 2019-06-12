@@ -1,8 +1,14 @@
 extern crate rand;
 
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+
 mod util;
 pub use util::find_index_of_max;
+pub use util::index_to_output_layer;
 
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Network {
     // Where the weights for the [i + 1]th (we skip the input layer) layer begin in the array
     weights_indices: Vec<usize>,
@@ -211,13 +217,15 @@ impl Network {
         };
 
         // Reverse through the hidden layers (0 becomes first layer)
-        for layer_index in (0..self.layer_sizes.len() - 1).rev() {
-            let layer_size = self.layer_sizes[layer_index + 1];
+        for layer_index in (1..self.layer_sizes.len() - 1).rev() {
+            let layer_size = self.layer_sizes[layer_index];
+            // let prev_layer_size = self.layer_sizes[layer_index + 1];
+
             // prev layer here means the last layer from the loop (even though it's actually the next layer)
             let prev_layer_weight_start = self.weights_indices[layer_index];
 
-            // Error for the previous layer
-            let error_start = self.biases_indices[layer_index];
+            // Error for this layer
+            let error_start = self.biases_indices[layer_index - 1];
 
             for (prev_neuron_i, prev_err_i) in last_error.enumerate() {
                 let start = prev_layer_weight_start + prev_neuron_i * layer_size;
@@ -248,6 +256,9 @@ impl Network {
         let mini_batch_len = mini_batch.len() as f64;
 
         for (input, desired_output) in mini_batch {
+            // assert!(input.len() == self.layer_sizes[0]);
+            // assert!(desired_output.len() == *self.layer_sizes.last().unwrap());
+
             let (activations, deltas) = self.back_propogate(input.to_vec(), &desired_output);
 
             for (total, activation) in total_activations.iter_mut().zip(activations.iter()) {
@@ -314,20 +325,30 @@ impl Network {
         batch_size: usize,
         learn_rate: f64,
         test_data: Option<&Vec<(Vec<f64>, Vec<f64>)>>,
+        print_epochs: bool,
     ) {
         for epoch in 0..epochs {
-            for batch in training_examples.chunks(batch_size) {
-                // TOOD: pick suitable lambda
-                self.mini_batch(batch.to_vec(), training_examples.len(), learn_rate, 5.0);
-            }
+            self.batch_train_iteration(&training_examples, batch_size, learn_rate);
 
-            if epoch % 5 == 0 {
+            if epoch % 5 == 0 && print_epochs {
                 if let Some(data) = &test_data {
                     println!("Epoch {}, err: {}", epoch, self.examine_error(data.to_vec()));
                 } else {
                     println!("Epoch {}", epoch);
                 }
             }
+        }
+    }
+
+    // Run a single iteration of batch train
+    pub fn batch_train_iteration(&mut self,
+        training_examples: &[(Vec<f64>, Vec<f64>)],
+        batch_size: usize,
+        learn_rate: f64,
+    ) {
+        for batch in training_examples.chunks(batch_size) {
+            // TOOD: pick suitable lambda
+            self.mini_batch(batch.to_vec(), training_examples.len(), learn_rate, 5.0);
         }
     }
 
@@ -387,5 +408,9 @@ impl Network {
         }
 
         error / training_examples.len() as f64
+    }
+
+    pub fn get_layer_sizes(&self) -> &[usize] {
+        &self.layer_sizes
     }
 }
