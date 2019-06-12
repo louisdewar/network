@@ -233,9 +233,7 @@ impl Network {
                 {
                     deltas[new_err_i] += self.weights[start + cur_neuron_i]
                         * deltas[prev_err_i]
-                        * util::sigmoid_prime(
-                            zs[error_start + prev_neuron_i],
-                        );
+                        * util::sigmoid_prime(zs[error_start + prev_neuron_i]);
                 }
             }
 
@@ -245,7 +243,13 @@ impl Network {
         (activations, deltas)
     }
 
-    fn mini_batch(&mut self, mini_batch: Vec<(Vec<f64>, Vec<f64>)>, n: usize, learn_rate: f64, lambda: f64) {
+    fn mini_batch(
+        &mut self,
+        mini_batch: Vec<(Vec<f64>, Vec<f64>)>,
+        n: usize,
+        learn_rate: f64,
+        lambda: f64,
+    ) {
         // Learn rate should be averaged across batch
         let learn_rate = learn_rate / mini_batch.len() as f64;
 
@@ -289,11 +293,13 @@ impl Network {
                     .iter_mut()
                     .enumerate()
                 {
-                    *weight = *weight * (1.0 - learn_rate * (lambda / n as f64)) - (learn_rate / mini_batch_len) * input[weight_i] * delta * learn_rate;
+                    *weight = *weight * (1.0 - learn_rate * (lambda / n as f64))
+                        - (learn_rate / mini_batch_len) * input[weight_i] * delta * learn_rate;
                 }
 
                 // Update bias
-                self.biases[self.biases_indices[layer_index - 1] + neuron_i] -= (learn_rate / mini_batch_len) * delta * learn_rate;
+                self.biases[self.biases_indices[layer_index - 1] + neuron_i] -=
+                    (learn_rate / mini_batch_len) * delta * learn_rate;
             }
         }
     }
@@ -332,7 +338,11 @@ impl Network {
 
             if epoch % 5 == 0 && print_epochs {
                 if let Some(data) = &test_data {
-                    println!("Epoch {}, err: {}", epoch, self.examine_error(data.to_vec()));
+                    println!(
+                        "Epoch {}, err: {}",
+                        epoch,
+                        self.examine_error(data.to_vec())
+                    );
                 } else {
                     println!("Epoch {}", epoch);
                 }
@@ -341,7 +351,8 @@ impl Network {
     }
 
     // Run a single iteration of batch train
-    pub fn batch_train_iteration(&mut self,
+    pub fn batch_train_iteration(
+        &mut self,
         training_examples: &[(Vec<f64>, Vec<f64>)],
         batch_size: usize,
         learn_rate: f64,

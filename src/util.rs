@@ -11,13 +11,16 @@ pub fn sigmoid_prime(x: f64) -> f64 {
 
 pub fn find_index_of_max(a: &[f64]) -> usize {
     use std::f64;
-    a.iter().enumerate().fold((std::usize::MAX, f64::NAN), |(i1, x), (i2, y)| {
-        if x > *y {
-            (i1, x)
-        } else {
-            (i2, *y)
-        }
-    }).0
+    a.iter()
+        .enumerate()
+        .fold((std::usize::MAX, f64::NAN), |(i1, x), (i2, y)| {
+            if x > *y {
+                (i1, x)
+            } else {
+                (i2, *y)
+            }
+        })
+        .0
 }
 
 pub fn index_to_output_layer(i: usize, output_size: usize) -> Vec<f64> {
