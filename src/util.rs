@@ -29,3 +29,10 @@ pub fn index_to_output_layer(i: usize, output_size: usize) -> Vec<f64> {
 
     vec
 }
+
+pub fn inverted_index_to_output_layer(i: usize, output_size: usize) -> Vec<f64> {
+    let mut vec = vec![1.0; output_size];
+    vec[i] = 0.0;
+
+    vec
+}

@@ -1,3 +1,5 @@
+#![warn(clippy::all)]
+
 extern crate rand;
 
 extern crate serde;
@@ -5,8 +7,7 @@ extern crate serde;
 extern crate serde_derive;
 
 mod util;
-pub use util::find_index_of_max;
-pub use util::index_to_output_layer;
+pub use util::{find_index_of_max, index_to_output_layer, inverted_index_to_output_layer};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Network {
